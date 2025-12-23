@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
+import os
 
-# ================= PAGE CONFIG =================
 st.set_page_config(
     page_title="AI-Driven Autonomous SOC",
     layout="wide"
@@ -9,25 +10,49 @@ st.set_page_config(
 
 st.title("🛡️ AI-Driven Autonomous SOC Dashboard")
 
-# ================= FULL MODE INDICATOR =================
-st.success(
-    "🟢 **Full SOC Mode Enabled**  \n"
-    "Analyzing real security events generated from production-grade datasets "
-    "(CICIDS 2017, UNSW-NB15, ADFA-LD)."
-)
-
-st.divider()
-
-# ================= DATA LOADING (FULL MODE) =================
 DATA_PATH = "data/parsed_logs/incident_responses.csv"
+FULL_MODE = os.path.exists(DATA_PATH)
 
 @st.cache_data
 def load_data():
-    return pd.read_csv(DATA_PATH)
+    if FULL_MODE:
+        return pd.read_csv(DATA_PATH)
+    else:
+        return pd.DataFrame({
+            "risk_score": np.random.normal(18, 6, 800).clip(0, 100),
+            "access_decision": np.random.choice(
+                ["ALLOW", "RESTRICT", "BLOCK"],
+                size=800,
+                p=[0.8, 0.18, 0.02]
+            ),
+            "automated_response": np.random.choice(
+                [
+                    "No action required",
+                    "Throttle connection",
+                    "Block IP temporarily",
+                    "Require MFA verification"
+                ],
+                size=800
+            )
+        })
 
 df = load_data()
 
-# ================= KPI SECTION =================
+# ================= MODE INDICATOR =================
+if FULL_MODE:
+    st.success(
+        "🟢 Full SOC Mode Enabled  \n"
+        "Analyzing over 8 lakh real security events."
+    )
+else:
+    st.info(
+        "🟡 Demo Mode (Cloud Deployment)  \n"
+        "Running simulated telemetry for visualization."
+    )
+
+st.divider()
+
+# ================= KPIs =================
 total_events = len(df)
 blocked = (df["access_decision"] == "BLOCK").sum()
 restricted = (df["access_decision"] == "RESTRICT").sum()
@@ -52,38 +77,23 @@ st.dataframe(alerts, width="stretch")
 
 st.divider()
 
-# ================= AUTOMATED RESPONSES =================
+# ================= RESPONSES =================
 st.subheader("🤖 Automated Incident Responses")
 responses = df[["access_decision", "automated_response"]].head(100)
 st.dataframe(responses, width="stretch")
 
 st.divider()
 
-# ================= DATASET COVERAGE =================
-st.subheader("📚 Dataset Coverage & Validation")
+# ================= DATASETS =================
+st.subheader("📚 Dataset Coverage")
 
-dataset_data = {
-    "Dataset": [
-        "CICIDS 2017",
-        "UNSW-NB15",
-        "ADFA-LD"
-    ],
-    "Type": [
-        "Network Intrusion Detection",
-        "Network Traffic & Attack Simulation",
-        "Host-based Intrusion Detection"
-    ],
-    "Role in SOC Pipeline": [
+dataset_df = pd.DataFrame({
+    "Dataset": ["CICIDS 2017", "UNSW-NB15", "ADFA-LD"],
+    "Role": [
         "Primary training & anomaly detection",
         "Cross-dataset validation",
-        "Host-level behavioral validation"
-    ],
-    "Status": [
-        "✔ Fully Integrated",
-        "✔ Validated",
-        "✔ Validated"
+        "Host-based behavioral validation"
     ]
-}
+})
 
-dataset_df = pd.DataFrame(dataset_data)
 st.table(dataset_df)
