@@ -1,0 +1,20 @@
+[2026-01-08 23:41:38] SOC Monitor started - continuous mode
+[2026-01-08 23:41:38] Starting network scan...
+[2026-01-08 23:41:38] PCAP parse error: [Errno 2] No such file or directory: 'tshark'
+[2026-01-08 23:41:38] [BLOCKED] IP: 192.168.32.11
+[2026-01-08 23:41:50] Scan complete. Threats: 2, Blocked IPs: 1
+[2026-01-08 23:42:20] Starting network scan...
+[2026-01-08 23:42:20] PCAP parse error: [Errno 2] No such file or directory: 'tshark'
+[2026-01-08 23:42:20] Scan complete. Threats: 2, Blocked IPs: 1
+[2026-01-08 23:42:50] Starting network scan...
+[2026-01-08 23:42:50] PCAP parse error: [Errno 2] No such file or directory: 'tshark'
+[2026-01-08 23:43:01] Scan complete. Threats: 2, Blocked IPs: 1
+[2026-01-08 23:43:31] Starting network scan...
+[2026-01-08 23:43:31] PCAP parse error: [Errno 2] No such file or directory: 'tshark'
+[2026-01-08 23:43:31] Scan complete. Threats: 2, Blocked IPs: 1
+[2026-01-08 23:44:01] Starting network scan...
+[2026-01-08 23:44:01] PCAP parse error: [Errno 2] No such file or directory: 'tshark'
+[2026-01-08 23:44:12] Scan complete. Threats: 2, Blocked IPs: 1
+[2026-01-08 23:44:42] Starting network scan...
+[2026-01-08 23:44:42] PCAP parse error: [Errno 2] No such file or directory: 'tshark'
+[2026-01-08 23:44:42] Scan complete. Threats: 2, Blocked IPs: 1
