@@ -70,7 +70,7 @@ class AlertService:
             results["telegram"] = self.telegram.send_alert(event_data)
         
         if self.config.get('notification_email', True) and self.email.is_configured():
-            recipients = self.config.get('gmail_recipient', self.config.get('gmail_email', ''))
+            recipients = self.config.get('gmail_recipient') or self.config.get('gmail_email')
             if recipients:
                 recipient_list = [r.strip() for r in recipients.split(',')]
                 results["email"] = self.email.send_alert(recipient_list, event_data)
@@ -84,7 +84,7 @@ class AlertService:
             results["telegram"] = self.telegram.send_daily_summary(summary_data)
         
         if self.config.get('notification_email', True) and self.email.is_configured():
-            recipients = self.config.get('gmail_recipient', self.config.get('gmail_email', ''))
+            recipients = self.config.get('gmail_recipient') or self.config.get('gmail_email')
             if recipients:
                 recipient_list = [r.strip() for r in recipients.split(',')]
                 results["email"] = self.email.send_daily_report(recipient_list, summary_data)
