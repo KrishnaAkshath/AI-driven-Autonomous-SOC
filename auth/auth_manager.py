@@ -160,32 +160,40 @@ def check_auth() -> Optional[dict]:
 def require_auth():
     user = check_auth()
     if not user:
-        st.switch_page("pages/0_🔐_Login.py")
+        st.switch_page("pages/0_Login.py")
         st.stop()
     return user
 
 
 def show_user_info(user: dict):
     role_colors = {"admin": "#FF4444", "analyst": "#00D4FF"}
+    initials = "".join([n[0].upper() for n in user['name'].split()[:2]]) if user['name'] else "U"
     
     st.sidebar.markdown(f"""
         <div style="background: rgba(26, 31, 46, 0.8); border-radius: 12px; padding: 1rem; margin-bottom: 1rem;">
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <span style="font-size: 1.5rem;">👤</span>
+            <div style="display: flex; align-items: center; gap: 0.8rem;">
+                <div style="width: 45px; height: 45px; border-radius: 50%; background: linear-gradient(135deg, #00D4FF 0%, #8B5CF6 100%); display: flex; align-items: center; justify-content: center; font-weight: 600; color: white;">{initials}</div>
                 <div>
                     <p style="margin: 0; color: #FAFAFA; font-weight: 600;">{user['name']}</p>
-                    <p style="margin: 0; color: #8B95A5; font-size: 0.8rem;">{user['email']}</p>
                     <span style="background: {role_colors.get(user['role'], '#8B95A5')}; color: white; padding: 0.1rem 0.5rem; border-radius: 10px; font-size: 0.7rem; text-transform: uppercase;">{user['role']}</span>
                 </div>
             </div>
         </div>
     """, unsafe_allow_html=True)
     
-    if st.sidebar.button("🚪 Logout", use_container_width=True):
+    if st.sidebar.button("My Profile", use_container_width=True):
+        st.switch_page("pages/98_Profile.py")
+    
+    if user.get('role') == 'admin':
+        if st.sidebar.button("Admin Panel", use_container_width=True, type="secondary"):
+            st.switch_page("pages/99_Admin.py")
+    
+    if st.sidebar.button("Logout", use_container_width=True):
         if "auth_token" in st.session_state:
             logout_user(st.session_state.auth_token)
             del st.session_state.auth_token
-        st.rerun()
+        st.switch_page("pages/0_Login.py")
 
 
 init_default_admin()
+

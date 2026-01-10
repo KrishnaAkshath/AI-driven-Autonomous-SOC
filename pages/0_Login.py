@@ -85,7 +85,7 @@ st.markdown("""
 from auth.auth_manager import login_user, register_user, check_auth
 
 if check_auth():
-    st.switch_page("pages/1_🏠_Dashboard.py")
+    st.switch_page("pages/1_Dashboard.py")
 
 st.markdown("""
     <div class="login-header">
@@ -129,7 +129,7 @@ if st.session_state.auth_mode == "login":
                 st.session_state.auth_token = user_data["token"]
                 st.success("✅ " + message)
                 st.balloons()
-                st.switch_page("pages/1_🏠_Dashboard.py")
+                st.switch_page("pages/1_Dashboard.py")
             else:
                 st.error("❌ " + message)
         else:

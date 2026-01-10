@@ -19,7 +19,7 @@ from auth.auth_manager import check_auth, show_user_info
 
 user = check_auth()
 if not user:
-    st.switch_page("pages/0_🔐_Login.py")
+    st.switch_page("pages/0_Login.py")
     st.stop()
 
 show_user_info(user)
@@ -188,7 +188,7 @@ with nav1:
         </div>
     """, unsafe_allow_html=True)
     if st.button("Open Dashboard", key="dash"):
-        st.switch_page("pages/1_🏠_Dashboard.py")
+        st.switch_page("pages/1_Dashboard.py")
 
 with nav2:
     st.markdown("""
@@ -199,7 +199,7 @@ with nav2:
         </div>
     """, unsafe_allow_html=True)
     if st.button("View Alerts", key="alerts"):
-        st.switch_page("pages/2_🚨_Alerts.py")
+        st.switch_page("pages/2_Alerts.py")
 
 with nav3:
     st.markdown("""
@@ -210,7 +210,7 @@ with nav3:
         </div>
     """, unsafe_allow_html=True)
     if st.button("View Map", key="map"):
-        st.switch_page("pages/3_🌍_Threat_Map.py")
+        st.switch_page("pages/3_Threat_Map.py")
 
 st.markdown("<br>", unsafe_allow_html=True)
 
@@ -225,7 +225,7 @@ with nav4:
         </div>
     """, unsafe_allow_html=True)
     if st.button("Open Forensics", key="forensics"):
-        st.switch_page("pages/4_🔬_Forensics.py")
+        st.switch_page("pages/4_Forensics.py")
 
 with nav5:
     st.markdown("""
@@ -236,7 +236,7 @@ with nav5:
         </div>
     """, unsafe_allow_html=True)
     if st.button("Generate Reports", key="reports"):
-        st.switch_page("pages/5_📊_Reports.py")
+        st.switch_page("pages/5_Reports.py")
 
 with nav6:
     st.markdown("""
@@ -247,7 +247,7 @@ with nav6:
         </div>
     """, unsafe_allow_html=True)
     if st.button("Open Settings", key="settings"):
-        st.switch_page("pages/6_⚙️_Settings.py")
+        st.switch_page("pages/6_Settings.py")
 
 st.markdown("---")
 

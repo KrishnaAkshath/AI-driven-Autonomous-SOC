@@ -39,7 +39,7 @@ from auth.auth_manager import check_auth, show_user_info, load_users, save_users
 
 user = check_auth()
 if not user:
-    st.switch_page("pages/0_🔐_Login.py")
+    st.switch_page("pages/0_Login.py")
     st.stop()
 
 if user.get('role') != 'admin':
