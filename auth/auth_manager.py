@@ -8,7 +8,7 @@ from typing import Optional, Dict, Tuple
 import streamlit as st
 
 AUTH_FILE = ".soc_users.json"
-SESSION_DURATION = 86400
+SESSION_DURATION = 2592000  # 30 days in seconds
 
 
 def hash_password(password: str) -> str:
