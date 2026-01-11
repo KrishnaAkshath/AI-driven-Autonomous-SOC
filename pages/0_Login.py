@@ -210,7 +210,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-from auth.auth_manager import authenticate_user, register_user, check_auth
+from auth.auth_manager import login_user, register_user, check_auth
 
 if check_auth():
     st.switch_page("pages/1_Dashboard.py")
@@ -252,13 +252,13 @@ if st.session_state.auth_mode == 'login':
     
     if st.button("Sign In", type="primary", use_container_width=True):
         if email and password:
-            user = authenticate_user(email, password)
-            if user:
+            success, message, user = login_user(email, password)
+            if success and user:
                 st.session_state.auth_token = user.get('token')
                 st.success("Welcome back!")
                 st.switch_page("pages/1_Dashboard.py")
             else:
-                st.error("Invalid credentials")
+                st.error(message)
         else:
             st.warning("Please enter email and password")
             
@@ -274,13 +274,13 @@ else:
             elif "@" not in email:
                 st.error("Please enter a valid email")
             else:
-                result = register_user(email, password, name)
-                if result.get('success'):
+                success, message = register_user(email, password, name)
+                if success:
                     st.success("Account created! Please login.")
                     st.session_state.auth_mode = 'login'
                     st.rerun()
                 else:
-                    st.error(result.get('error', 'Registration failed'))
+                    st.error(message)
         else:
             st.warning("Please fill all fields")
 
