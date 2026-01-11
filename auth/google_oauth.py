@@ -15,19 +15,26 @@ GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
 
 def get_oauth_config() -> Dict:
     """Load OAuth config from secrets or config file"""
-    config = {}
     
-    # Try Streamlit secrets first
+    # Try Streamlit secrets first (for Streamlit Cloud)
     try:
-        if hasattr(st, 'secrets') and 'google_oauth' in st.secrets:
-            return dict(st.secrets['google_oauth'])
-    except:
+        if 'google_oauth' in st.secrets:
+            return {
+                'client_id': st.secrets['google_oauth']['client_id'],
+                'client_secret': st.secrets['google_oauth']['client_secret'],
+                'redirect_uri': st.secrets['google_oauth']['redirect_uri']
+            }
+    except Exception as e:
         pass
     
-    # Try config file
+    # Try config file (for local development)
+    config = {}
     if os.path.exists('.soc_config.json'):
-        with open('.soc_config.json', 'r') as f:
-            config = json.load(f)
+        try:
+            with open('.soc_config.json', 'r') as f:
+                config = json.load(f)
+        except:
+            pass
     
     return {
         'client_id': config.get('google_client_id', ''),
