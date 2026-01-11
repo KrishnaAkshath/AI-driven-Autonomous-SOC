@@ -5,39 +5,241 @@ import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import random
 import os
+import sys
 
-st.set_page_config(page_title="Dashboard | SOC", page_icon="🏠", layout="wide")
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+st.set_page_config(page_title="Dashboard | SOC", page_icon="D", layout="wide")
+
+# Premium animated theme
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-    html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
-    .metric-container {
-        background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(0, 212, 255, 0.05) 100%);
-        border: 1px solid rgba(0, 212, 255, 0.3);
-        border-radius: 12px;
-        padding: 1.5rem;
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    
+    html, body, [class*="css"] {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    
+    .stApp {
+        background: linear-gradient(135deg, #0a0e17 0%, #151c2c 50%, #0d1320 100%);
+    }
+    
+    /* Animated background glow */
+    .stApp::before {
+        content: '';
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: 
+            radial-gradient(ellipse at 20% 80%, rgba(0, 212, 255, 0.08) 0%, transparent 50%),
+            radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
+        pointer-events: none;
+        animation: bgPulse 15s ease-in-out infinite;
+    }
+    
+    @keyframes bgPulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
+    }
+    
+    /* Header with gradient text */
+    .premium-header {
+        background: linear-gradient(135deg, rgba(0, 212, 255, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+        border: 1px solid rgba(0, 212, 255, 0.2);
+        border-radius: 24px;
+        padding: 2rem 2.5rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .premium-header::before {
+        content: '';
+        position: absolute;
+        top: -50%; right: -20%;
+        width: 400px; height: 400px;
+        background: radial-gradient(circle, rgba(0, 212, 255, 0.15) 0%, transparent 70%);
+        animation: float 8s ease-in-out infinite;
+    }
+    
+    .premium-header h1 {
+        font-size: 2.8rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #FFFFFF 0%, #00D4FF 50%, #8B5CF6 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 0;
+        position: relative;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-20px) rotate(5deg); }
+    }
+    
+    /* Metric cards with glow */
+    .metric-card {
+        background: linear-gradient(145deg, rgba(26, 31, 46, 0.9) 0%, rgba(15, 20, 30, 0.95) 100%);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 1.8rem;
         text-align: center;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .metric-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: -100%;
+        width: 100%; height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+        transition: left 0.6s ease;
+    }
+    
+    .metric-card:hover::before {
+        left: 100%;
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-8px) scale(1.02);
+        border-color: rgba(0, 212, 255, 0.5);
+        box-shadow: 0 20px 40px rgba(0, 212, 255, 0.2);
+    }
+    
+    .metric-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        animation: iconBounce 3s ease-in-out infinite;
+    }
+    
+    @keyframes iconBounce {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+    
+    .metric-value {
+        font-size: 3rem;
+        font-weight: 800;
+        margin: 0.3rem 0;
+        text-shadow: 0 0 30px currentColor;
+    }
+    
+    .metric-label {
+        color: #8B95A5;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+    }
+    
+    /* Live indicator */
+    .live-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        background: rgba(0, 200, 83, 0.15);
+        border: 1px solid rgba(0, 200, 83, 0.4);
+        padding: 0.5rem 1.2rem;
+        border-radius: 30px;
+        font-size: 0.9rem;
+        color: #00C853;
+        animation: livePulse 2s ease-in-out infinite;
+    }
+    
+    .live-dot {
+        width: 10px; height: 10px;
+        background: #00C853;
+        border-radius: 50%;
+        animation: dotPulse 1.5s ease-in-out infinite;
+    }
+    
+    @keyframes dotPulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.5); opacity: 0.5; }
+    }
+    
+    @keyframes livePulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(0, 200, 83, 0.4); }
+        50% { box-shadow: 0 0 0 10px rgba(0, 200, 83, 0); }
+    }
+    
+    /* Section headers */
+    .section-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #FAFAFA;
+        margin-bottom: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+    }
+    
+    .section-title::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, rgba(0, 212, 255, 0.3), transparent);
+    }
+    
+    /* Charts container */
+    .chart-container {
+        background: rgba(26, 31, 46, 0.6);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        padding: 1.5rem;
         transition: all 0.3s ease;
     }
-    .metric-container:hover {
+    
+    .chart-container:hover {
+        border-color: rgba(0, 212, 255, 0.2);
+    }
+    
+    /* Buttons */
+    .stButton > button {
+        background: linear-gradient(135deg, #00D4FF 0%, #0099CC 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+    }
+    
+    .stButton > button:hover {
         transform: translateY(-3px);
-        box-shadow: 0 10px 30px rgba(0, 212, 255, 0.15);
+        box-shadow: 0 8px 30px rgba(0, 212, 255, 0.5);
     }
-    .big-number { font-size: 3rem; font-weight: 700; color: #00D4FF; line-height: 1; }
-    .metric-label { font-size: 0.9rem; color: #8B95A5; text-transform: uppercase; letter-spacing: 1px; margin-top: 0.5rem; }
-    .section-header { font-size: 1.3rem; font-weight: 600; color: #FAFAFA; margin-bottom: 1rem; }
-    .live-indicator {
-        display: inline-flex; align-items: center; gap: 0.5rem;
-        background: rgba(0, 200, 83, 0.15); border: 1px solid rgba(0, 200, 83, 0.3);
-        padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.8rem; color: #00C853;
+    
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(26, 31, 46, 0.5); }
+    ::-webkit-scrollbar-thumb { 
+        background: linear-gradient(135deg, #00D4FF, #8B5CF6); 
+        border-radius: 4px; 
     }
-    .pulse { width: 8px; height: 8px; background: #00C853; border-radius: 50%; animation: pulse 2s infinite; }
-    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.3); } }
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
+    
+    /* Hide Streamlit branding */
+    #MainMenu, footer, header { visibility: hidden; }
+    
+    /* Sidebar styling */
+    section[data-testid="stSidebar"] {
+        background: linear-gradient(180deg, rgba(10, 14, 23, 0.98) 0%, rgba(15, 20, 30, 0.98) 100%);
+        border-right: 1px solid rgba(255, 255, 255, 0.05);
+    }
 </style>
 """, unsafe_allow_html=True)
+
+from auth.auth_manager import check_auth, show_user_info
+
+user = check_auth()
+if not user:
+    st.switch_page("pages/0_Login.py")
+    st.stop()
+
+show_user_info(user)
 
 DATA_PATH = "data/parsed_logs/incident_responses.csv"
 FULL_MODE = os.path.exists(DATA_PATH)
@@ -77,15 +279,23 @@ def load_soc_data():
 
 df = load_soc_data()
 
-col_header1, col_header2 = st.columns([3, 1])
-with col_header1:
-    st.markdown("# 🏠 Security Dashboard")
-    st.markdown("Real-time overview of your security posture")
-with col_header2:
-    st.markdown('<div class="live-indicator" style="float: right; margin-top: 1rem;"><div class="pulse"></div>Live Monitoring</div>', unsafe_allow_html=True)
+# Premium Header
+st.markdown("""
+    <div class="premium-header">
+        <h1>Security Operations Center</h1>
+        <p style="color: #8B95A5; margin: 0.5rem 0 0 0; font-size: 1.1rem;">
+            Real-time threat monitoring and autonomous response
+        </p>
+        <div style="position: absolute; top: 1.5rem; right: 2rem;">
+            <div class="live-badge">
+                <div class="live-dot"></div>
+                LIVE MONITORING
+            </div>
+        </div>
+    </div>
+""", unsafe_allow_html=True)
 
-st.markdown("---")
-
+# Calculate metrics
 total = len(df)
 blocked = (df["access_decision"] == "BLOCK").sum()
 restricted = (df["access_decision"] == "RESTRICT").sum()
@@ -93,97 +303,147 @@ allowed = (df["access_decision"] == "ALLOW").sum()
 avg_risk = df["risk_score"].mean()
 critical = (df["risk_score"] >= 80).sum()
 
+# Animated Metric Cards
 m1, m2, m3, m4, m5, m6 = st.columns(6)
-metrics = [
-    (m1, total, "Total Events", "#00D4FF", "📊"),
-    (m2, critical, "Critical", "#FF4444", "🔴"),
-    (m3, blocked, "Blocked", "#FF6B6B", "🛑"),
-    (m4, restricted, "Restricted", "#FF8C00", "⚠️"),
-    (m5, allowed, "Allowed", "#00C853", "✅"),
-    (m6, f"{avg_risk:.1f}", "Avg Risk", "#8B5CF6", "📈")
+
+metrics_data = [
+    (m1, total, "Total Events", "#00D4FF"),
+    (m2, critical, "Critical", "#FF4444"),
+    (m3, blocked, "Blocked", "#FF6B6B"),
+    (m4, restricted, "Restricted", "#FF8C00"),
+    (m5, allowed, "Allowed", "#00C853"),
+    (m6, f"{avg_risk:.1f}", "Avg Risk", "#8B5CF6")
 ]
 
-for col, value, label, color, icon in metrics:
+for col, value, label, color in metrics_data:
     with col:
         display_value = f"{value:,}" if isinstance(value, (int, np.integer)) else value
-        st.markdown(f'<div class="metric-container" style="border-color: {color};"><p style="font-size: 0.9rem; margin: 0;">{icon}</p><p class="big-number" style="color: {color};">{display_value}</p><p class="metric-label">{label}</p></div>', unsafe_allow_html=True)
+        st.markdown(f"""
+            <div class="metric-card">
+                <p class="metric-value" style="color: {color};">{display_value}</p>
+                <p class="metric-label">{label}</p>
+            </div>
+        """, unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 
+# Charts
 chart1, chart2 = st.columns(2)
 
 with chart1:
-    st.markdown('<p class="section-header">📈 Threat Activity (Last 48 Hours)</p>', unsafe_allow_html=True)
+    st.markdown('<p class="section-title">Threat Activity Timeline</p>', unsafe_allow_html=True)
     if hasattr(df["timestamp"].iloc[0], "hour"):
         df["hour"] = df["timestamp"].apply(lambda x: x.replace(minute=0, second=0, microsecond=0))
         hourly = df.groupby("hour").size().reset_index(name="count")
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=hourly["hour"], y=hourly["count"], mode="lines+markers", fill="tozeroy",
-                                  line=dict(color="#00D4FF", width=2), marker=dict(size=6), fillcolor="rgba(0, 212, 255, 0.1)"))
-        fig.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font_color="#FAFAFA",
-                          xaxis=dict(showgrid=False), yaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.1)"),
-                          margin=dict(l=20, r=20, t=20, b=20), height=300)
+        fig.add_trace(go.Scatter(
+            x=hourly["hour"], y=hourly["count"], 
+            mode="lines+markers", fill="tozeroy",
+            line=dict(color="#00D4FF", width=3, shape='spline'),
+            marker=dict(size=8, color="#00D4FF", line=dict(width=2, color="#FFFFFF")),
+            fillcolor="rgba(0, 212, 255, 0.15)"
+        ))
+        fig.update_layout(
+            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+            font_color="#FAFAFA",
+            xaxis=dict(showgrid=False, showline=False),
+            yaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.05)", showline=False),
+            margin=dict(l=20, r=20, t=20, b=20), height=300
+        )
         st.plotly_chart(fig, use_container_width=True)
     else:
-        st.info("Timeline data not available in demo mode")
+        st.info("Timeline data loading...")
 
 with chart2:
-    st.markdown('<p class="section-header">🎯 Decision Distribution</p>', unsafe_allow_html=True)
+    st.markdown('<p class="section-title">Decision Distribution</p>', unsafe_allow_html=True)
     decision_counts = df["access_decision"].value_counts()
-    fig2 = go.Figure(data=[go.Pie(labels=decision_counts.index, values=decision_counts.values, hole=0.5,
-                                   marker_colors=["#00C853", "#FF8C00", "#FF4444"], textinfo="label+percent", textfont_size=12)])
-    fig2.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font_color="#FAFAFA",
-                       showlegend=False, margin=dict(l=20, r=20, t=20, b=20), height=300)
+    fig2 = go.Figure(data=[go.Pie(
+        labels=decision_counts.index, values=decision_counts.values, hole=0.6,
+        marker_colors=["#00C853", "#FF8C00", "#FF4444"],
+        textinfo="percent", textfont_size=14, textfont_color="#FFFFFF"
+    )])
+    fig2.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        font_color="#FAFAFA", showlegend=True,
+        legend=dict(orientation="h", yanchor="bottom", y=-0.1),
+        margin=dict(l=20, r=20, t=20, b=60), height=300
+    )
     st.plotly_chart(fig2, use_container_width=True)
 
 chart3, chart4 = st.columns(2)
 
 with chart3:
-    st.markdown('<p class="section-header">🔥 Top Attack Types</p>', unsafe_allow_html=True)
+    st.markdown('<p class="section-title">Top Attack Types</p>', unsafe_allow_html=True)
     attack_counts = df[df["attack_type"] != "Normal"]["attack_type"].value_counts().head(6)
-    fig3 = go.Figure(go.Bar(x=attack_counts.values, y=attack_counts.index, orientation="h",
-                             marker=dict(color=attack_counts.values, colorscale=[[0, "#00D4FF"], [0.5, "#8B5CF6"], [1, "#FF4444"]])))
-    fig3.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font_color="#FAFAFA",
-                       xaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.1)"), yaxis=dict(showgrid=False),
-                       margin=dict(l=20, r=20, t=20, b=20), height=280)
+    fig3 = go.Figure(go.Bar(
+        x=attack_counts.values, y=attack_counts.index, orientation="h",
+        marker=dict(
+            color=attack_counts.values,
+            colorscale=[[0, "#00D4FF"], [0.5, "#8B5CF6"], [1, "#FF4444"]],
+            line=dict(width=0)
+        )
+    ))
+    fig3.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        font_color="#FAFAFA",
+        xaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.05)"),
+        yaxis=dict(showgrid=False),
+        margin=dict(l=20, r=20, t=20, b=20), height=280
+    )
     st.plotly_chart(fig3, use_container_width=True)
 
 with chart4:
-    st.markdown('<p class="section-header">🌍 Attack Sources by Country</p>', unsafe_allow_html=True)
+    st.markdown('<p class="section-title">Attack Sources</p>', unsafe_allow_html=True)
     if "source_country" in df.columns:
         country_counts = df[df["attack_type"] != "Normal"]["source_country"].value_counts().head(6)
-        fig4 = go.Figure(go.Bar(x=country_counts.index, y=country_counts.values,
-                                 marker=dict(color=country_counts.values, colorscale=[[0, "#FF8C00"], [1, "#FF4444"]])))
-        fig4.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font_color="#FAFAFA",
-                           xaxis=dict(showgrid=False, tickangle=-45), yaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.1)"),
-                           margin=dict(l=20, r=20, t=20, b=60), height=280)
+        fig4 = go.Figure(go.Bar(
+            x=country_counts.index, y=country_counts.values,
+            marker=dict(
+                color=country_counts.values,
+                colorscale=[[0, "#FF8C00"], [1, "#FF4444"]]
+            )
+        ))
+        fig4.update_layout(
+            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+            font_color="#FAFAFA",
+            xaxis=dict(showgrid=False, tickangle=-45),
+            yaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.05)"),
+            margin=dict(l=20, r=20, t=20, b=60), height=280
+        )
         st.plotly_chart(fig4, use_container_width=True)
 
 st.markdown("---")
-st.markdown('<p class="section-header">🎚️ Overall Security Health</p>', unsafe_allow_html=True)
+
+# Security Score Gauge
+st.markdown('<p class="section-title">Security Health Score</p>', unsafe_allow_html=True)
 
 gauge_col1, gauge_col2, gauge_col3 = st.columns([1, 2, 1])
 
 with gauge_col2:
     security_score = max(0, 100 - avg_risk)
     fig_gauge = go.Figure(go.Indicator(
-        mode="gauge+number+delta", value=security_score,
-        domain={'x': [0, 1], 'y': [0, 1]},
-        title={'text': "Security Score", 'font': {'size': 20, 'color': '#FAFAFA'}},
-        delta={'reference': 75, 'increasing': {'color': "#00C853"}, 'decreasing': {'color': "#FF4444"}},
+        mode="gauge+number",
+        value=security_score,
+        title={'text': "Overall Security", 'font': {'size': 18, 'color': '#FAFAFA'}},
+        number={'font': {'size': 48, 'color': '#00D4FF'}},
         gauge={
-            'axis': {'range': [0, 100], 'tickcolor': "#FAFAFA"},
-            'bar': {'color': "#00D4FF"},
-            'bgcolor': "rgba(26, 31, 46, 0.7)",
+            'axis': {'range': [0, 100], 'tickcolor': "#FAFAFA", 'tickwidth': 2},
+            'bar': {'color': "#00D4FF", 'thickness': 0.3},
+            'bgcolor': "rgba(26, 31, 46, 0.8)",
             'borderwidth': 2, 'bordercolor': "rgba(255, 255, 255, 0.1)",
-            'steps': [{'range': [0, 40], 'color': 'rgba(255, 68, 68, 0.3)'},
-                      {'range': [40, 70], 'color': 'rgba(255, 140, 0, 0.3)'},
-                      {'range': [70, 100], 'color': 'rgba(0, 200, 83, 0.3)'}],
-            'threshold': {'line': {'color': "#FAFAFA", 'width': 4}, 'thickness': 0.75, 'value': security_score}
+            'steps': [
+                {'range': [0, 40], 'color': 'rgba(255, 68, 68, 0.3)'},
+                {'range': [40, 70], 'color': 'rgba(255, 140, 0, 0.3)'},
+                {'range': [70, 100], 'color': 'rgba(0, 200, 83, 0.3)'}
+            ],
         }
     ))
-    fig_gauge.update_layout(paper_bgcolor="rgba(0,0,0,0)", font={'color': "#FAFAFA", 'family': "Inter"}, height=300)
+    fig_gauge.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)", 
+        font={'color': "#FAFAFA", 'family': "Inter"}, 
+        height=280
+    )
     st.plotly_chart(fig_gauge, use_container_width=True)
 
 st.markdown("---")
-st.markdown('<div style="text-align: center; color: #8B95A5; padding: 1rem;"><p style="margin: 0;">🛡️ AI-Driven Autonomous SOC | Zero Trust Security Platform</p></div>', unsafe_allow_html=True)
+st.markdown('<div style="text-align: center; color: #8B95A5; padding: 1rem;"><p style="margin: 0;">AI-Driven Autonomous SOC | Zero Trust Security Platform</p></div>', unsafe_allow_html=True)
