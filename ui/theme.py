@@ -212,20 +212,38 @@ PREMIUM_CSS = """
     .stTabs [data-baseweb="tab-list"] {
         background: rgba(26, 31, 46, 0.5);
         border-radius: 14px;
-        padding: 5px;
-        gap: 5px;
+        padding: 8px;
+        gap: 8px;
     }
     
     .stTabs [data-baseweb="tab"] {
         background: transparent;
         border-radius: 10px;
         color: #8B95A5;
+        padding: 0.75rem 1.5rem !important;
+        margin: 0 4px;
         transition: all 0.3s ease;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+    
+    .stTabs [data-baseweb="tab"]:hover {
+        background: rgba(0, 212, 255, 0.1);
+        color: #00D4FF;
     }
     
     .stTabs [aria-selected="true"] {
         background: linear-gradient(135deg, #00D4FF 0%, #0099CC 100%) !important;
         color: white !important;
+        box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+    }
+    
+    .stTabs [data-baseweb="tab-border"] {
+        display: none;
+    }
+    
+    .stTabs [data-baseweb="tab-highlight"] {
+        display: none;
     }
     
     /* Progress bars */
