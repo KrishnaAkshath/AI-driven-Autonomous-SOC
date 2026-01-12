@@ -228,4 +228,3 @@ else:
                 else:
                     st.error(msg)
 
-st.markdown('<p style="text-align: center; color: #8B95A5; font-size: 0.75rem; margin-top: 1rem;">Default: admin@soc.local / admin123</p>', unsafe_allow_html=True)

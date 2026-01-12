@@ -315,6 +315,62 @@ PREMIUM_CSS = """
 </style>
 """
 
+# Admin Override CSS - Darker, Gold/Red Accents
+ADMIN_CSS_OVERRIDE = """
+<style>
+    /* Admin App Background Pulse */
+    .stApp::before {
+        background: 
+            radial-gradient(ellipse at 20% 80%, rgba(255, 68, 68, 0.05) 0%, transparent 50%),
+            radial-gradient(ellipse at 80% 20%, rgba(255, 215, 0, 0.05) 0%, transparent 50%);
+    }
+
+    /* Admin Page Header */
+    .page-header {
+        background: linear-gradient(135deg, rgba(80, 20, 20, 0.3) 0%, rgba(60, 40, 0, 0.3) 100%);
+        border: 1px solid rgba(255, 68, 68, 0.3);
+    }
+    
+    .page-header h1 {
+        background: linear-gradient(135deg, #FFFFFF 0%, #FFD700 50%, #FF4444 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    /* Admin Sidebar */
+    section[data-testid="stSidebar"] {
+        border-right: 1px solid rgba(255, 68, 68, 0.15);
+    }
+    
+    /* Admin Buttons */
+    .stButton > button {
+        background: linear-gradient(135deg, #CC0000 0%, #990000 100%) !important;
+        box-shadow: 0 4px 15px rgba(200, 0, 0, 0.3) !important;
+    }
+    
+    .stButton > button:hover {
+        box-shadow: 0 8px 30px rgba(255, 0, 0, 0.5) !important;
+    }
+    
+    /* Admin Tabs */
+    .stTabs [data-baseweb="tab"]:hover {
+        background: rgba(255, 68, 68, 0.1);
+        color: #FF4444;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background: linear-gradient(135deg, #FF4444 0%, #CC0000 100%) !important;
+        box-shadow: 0 4px 15px rgba(255, 68, 68, 0.3);
+    }
+    
+    /* Admin Inputs */
+    .stTextInput > div > div > input:focus {
+        border-color: #FFD700 !important;
+        box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2) !important;
+    }
+</style>
+"""
+
 def page_header(title, subtitle=""):
     return f"""
     <div class="page-header">

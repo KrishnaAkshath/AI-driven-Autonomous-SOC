@@ -98,6 +98,7 @@ def login_user(email: str, password: str) -> Tuple[bool, str, Optional[dict]]:
         "email": email,
         "name": user["name"],
         "role": user["role"],
+        "photo": user.get("photo", ""),
         "token": session_token
     }
 
@@ -125,8 +126,9 @@ def verify_session(token: str) -> Optional[dict]:
     user = data["users"][email]
     return {
         "email": email,
-        "name": user["name"],
-        "role": user["role"]
+        "name": user.get("name", ""),
+        "role": user.get("role", "analyst"),
+        "photo": user.get("photo", "")
     }
 
 
@@ -166,16 +168,31 @@ def require_auth():
 
 
 def show_user_info(user: dict):
+    # Apply Admin Theme if applicable
+    if user.get('role') == 'admin':
+        try:
+            from ui.theme import ADMIN_CSS_OVERRIDE
+            st.markdown(ADMIN_CSS_OVERRIDE, unsafe_allow_html=True)
+        except ImportError:
+            pass
+
     role_colors = {"admin": "#FF4444", "analyst": "#00D4FF"}
-    initials = "".join([n[0].upper() for n in user['name'].split()[:2]]) if user['name'] else "U"
+    display_name = user.get('name', 'User')
+    initials = "".join([n[0].upper() for n in display_name.split()[:2]]) if display_name else "U"
+    
+    user_photo = user.get('photo', '')
+    if user_photo:
+        avatar_html = f'<img src="{user_photo}" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover;">'
+    else:
+        avatar_html = f'<div style="width: 45px; height: 45px; border-radius: 50%; background: linear-gradient(135deg, #00D4FF 0%, #8B5CF6 100%); display: flex; align-items: center; justify-content: center; font-weight: 600; color: white;">{initials}</div>'
     
     st.sidebar.markdown(f"""
         <div style="background: rgba(26, 31, 46, 0.8); border-radius: 12px; padding: 1rem; margin-bottom: 1rem;">
             <div style="display: flex; align-items: center; gap: 0.8rem;">
-                <div style="width: 45px; height: 45px; border-radius: 50%; background: linear-gradient(135deg, #00D4FF 0%, #8B5CF6 100%); display: flex; align-items: center; justify-content: center; font-weight: 600; color: white;">{initials}</div>
+                {avatar_html}
                 <div>
-                    <p style="margin: 0; color: #FAFAFA; font-weight: 600;">{user['name']}</p>
-                    <span style="background: {role_colors.get(user['role'], '#8B95A5')}; color: white; padding: 0.1rem 0.5rem; border-radius: 10px; font-size: 0.7rem; text-transform: uppercase;">{user['role']}</span>
+                    <p style="margin: 0; color: #FAFAFA; font-weight: 600;">{display_name}</p>
+                    <span style="background: {role_colors.get(user.get('role'), '#8B95A5')}; color: white; padding: 0.1rem 0.5rem; border-radius: 10px; font-size: 0.7rem; text-transform: uppercase;">{user.get('role', 'analyst')}</span>
                 </div>
             </div>
         </div>
