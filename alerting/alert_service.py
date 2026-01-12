@@ -66,14 +66,65 @@ class AlertService:
         if not self.should_alert(event_data):
             return results
         
-        if self.config.get('notification_telegram', True) and self.telegram.is_configured():
-            results["telegram"] = self.telegram.send_alert(event_data)
+        # Load user preferences for broadcasting
+        try:
+            from auth.auth_manager import load_users
+            users_data = load_users().get("users", {})
+        except Exception as e:
+            print(f"Error loading users: {e}")
+            users_data = {}
+            
+        email_recipients = []
+        telegram_chats = []
+
+        # 1. Global Admin Config recipients
+        global_recipients = self.config.get('gmail_recipient') or self.config.get('gmail_email')
+        if global_recipients:
+            email_recipients.extend([r.strip() for r in global_recipients.split(',')])
         
+        if self.config.get('telegram_chat_id'):
+            telegram_chats.append(self.config.get('telegram_chat_id'))
+
+        # 2. Add Users based on preferences
+        risk_score = event_data.get('risk_score', 0)
+        is_critical = risk_score >= 80
+
+        for email, u in users_data.items():
+             # Email
+             if u.get('email_alerts', True):
+                 if u.get('critical_only', False) and not is_critical:
+                     pass
+                 else:
+                     if email not in email_recipients:
+                        email_recipients.append(email)
+             
+             # Telegram
+             tg_id = u.get('telegram_chat_id')
+             if tg_id:
+                 if u.get('critical_only', False) and not is_critical:
+                     pass
+                 else:
+                     if tg_id not in telegram_chats:
+                         telegram_chats.append(tg_id)
+
+        # 3. Send Alerts
+        # Telegram (send individually)
+        if self.config.get('notification_telegram', True) and self.telegram.bot_token:
+            any_success = False
+            # Dedup chats
+            telegram_chats = list(set(telegram_chats))
+            
+            for chat_id in telegram_chats:
+                if self.telegram.send_alert(event_data, chat_id=chat_id):
+                    any_success = True
+            results["telegram"] = any_success
+        
+        # Email (batch)
         if self.config.get('notification_email', True) and self.email.is_configured():
-            recipients = self.config.get('gmail_recipient') or self.config.get('gmail_email')
-            if recipients:
-                recipient_list = [r.strip() for r in recipients.split(',')]
-                results["email"] = self.email.send_alert(recipient_list, event_data)
+            # Dedup emails
+            email_recipients = list(set(email_recipients))
+            if email_recipients:
+                results["email"] = self.email.send_alert(email_recipients, event_data)
         
         return results
     

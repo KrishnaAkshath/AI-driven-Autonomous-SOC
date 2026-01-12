@@ -14,15 +14,16 @@ class TelegramNotifier:
     def is_configured(self) -> bool:
         return bool(self.bot_token and self.chat_id)
     
-    def send_message(self, message: str, parse_mode: str = "HTML") -> bool:
-        if not self.is_configured():
+    def send_message(self, message: str, parse_mode: str = "HTML", chat_id: Optional[str] = None) -> bool:
+        target_chat = chat_id or self.chat_id
+        if not self.bot_token or not target_chat:
             print("[WARNING] Telegram not configured")
             return False
         
         try:
             response = requests.post(
                 f"{self.api_base}/sendMessage",
-                json={"chat_id": self.chat_id, "text": message, "parse_mode": parse_mode},
+                json={"chat_id": target_chat, "text": message, "parse_mode": parse_mode},
                 timeout=10
             )
             return response.status_code == 200
@@ -30,7 +31,7 @@ class TelegramNotifier:
             print(f"[ERROR] Telegram send failed: {e}")
             return False
     
-    def send_alert(self, event_data: Dict[str, Any]) -> bool:
+    def send_alert(self, event_data: Dict[str, Any], chat_id: Optional[str] = None) -> bool:
         risk_score = event_data.get('risk_score', 0)
         
         if risk_score >= 80:
@@ -61,9 +62,9 @@ class TelegramNotifier:
 <i>🕐 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</i>
 <i>🛡️ AI-Driven Autonomous SOC</i>
 """
-        return self.send_message(message.strip())
+        return self.send_message(message.strip(), chat_id=chat_id)
     
-    def send_daily_summary(self, summary_data: Dict[str, Any]) -> bool:
+    def send_daily_summary(self, summary_data: Dict[str, Any], chat_id: Optional[str] = None) -> bool:
         message = f"""
 📊 <b>DAILY SOC SUMMARY</b>
 
@@ -78,7 +79,7 @@ class TelegramNotifier:
 <i>🕐 Report generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</i>
 <i>🛡️ AI-Driven Autonomous SOC</i>
 """
-        return self.send_message(message.strip())
+        return self.send_message(message.strip(), chat_id=chat_id)
     
     def test_connection(self) -> bool:
         return self.send_message("🔗 SOC Connection Test - Success! ✅")
