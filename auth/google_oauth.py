@@ -53,9 +53,12 @@ def get_google_auth_url(state: str = None) -> str:
     if not state:
         state = secrets.token_urlsafe(32)
     
+    # Use configured redirect_uri
+    redirect_uri = config.get('redirect_uri', 'http://localhost:8501')
+    
     params = {
         'client_id': config['client_id'],
-        'redirect_uri': config['redirect_uri'],
+        'redirect_uri': redirect_uri,
         'response_type': 'code',
         'scope': 'openid email profile',
         'state': state,

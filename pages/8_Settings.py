@@ -151,14 +151,29 @@ with tab3:
     
     st.markdown("<br>", unsafe_allow_html=True)
     
-    if st.button("Save Notifications", type="primary"):
-        config["gmail_email"] = gmail_email
-        config["gmail_password"] = gmail_password
-        config["gmail_recipient"] = gmail_recipient
-        config["telegram_token"] = telegram_token
-        config["telegram_chat_id"] = telegram_chat
-        save_config(config)
-        st.success("Notification settings saved!")
+    col_save, col_test = st.columns(2)
+    
+    with col_save:
+        if st.button("Save Notifications", type="primary", use_container_width=True):
+            config["gmail_email"] = gmail_email
+            config["gmail_password"] = gmail_password
+            config["gmail_recipient"] = gmail_recipient
+            config["telegram_token"] = telegram_token
+            config["telegram_chat_id"] = telegram_chat
+            save_config(config)
+            st.success("Notification settings saved!")
+    
+    with col_test:
+        if st.button("Send Test Alert", use_container_width=True):
+            try:
+                from alerting.alert_service import send_test_alert
+                result = send_test_alert()
+                if result.get("telegram") or result.get("email"):
+                    st.success(f"Test alert sent! Telegram: {'✅' if result.get('telegram') else '❌'} | Email: {'✅' if result.get('email') else '❌'}")
+                else:
+                    st.warning("No alerts sent. Check your configuration.")
+            except Exception as e:
+                st.error(f"Error: {e}")
 
 with tab4:
     st.markdown(section_title("Alert Thresholds"), unsafe_allow_html=True)

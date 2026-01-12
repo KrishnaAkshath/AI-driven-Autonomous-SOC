@@ -279,6 +279,33 @@ def load_soc_data():
 
 df = load_soc_data()
 
+# Alert service for critical events
+try:
+    from alerting.alert_service import trigger_alert, send_test_alert
+    ALERTS_AVAILABLE = True
+except:
+    ALERTS_AVAILABLE = False
+
+# Check for critical events and send alerts
+if ALERTS_AVAILABLE:
+    critical_events = df[df["risk_score"] >= 80]
+    if len(critical_events) > 0 and 'last_alert_check' not in st.session_state:
+        st.session_state.last_alert_check = True
+        # Send alert for the most critical event
+        worst_event = critical_events.iloc[0]
+        alert_data = {
+            "attack_type": worst_event.get("attack_type", "Unknown"),
+            "risk_score": float(worst_event.get("risk_score", 0)),
+            "source_ip": worst_event.get("source_ip", "Unknown"),
+            "access_decision": worst_event.get("access_decision", "BLOCK"),
+            "source_country": worst_event.get("source_country", "Unknown"),
+            "dest_port": int(worst_event.get("dest_port", 0)),
+            "timestamp": str(worst_event.get("timestamp", datetime.now()))
+        }
+        result = trigger_alert(alert_data)
+        if result.get("telegram") or result.get("email"):
+            st.toast("🚨 Critical alert sent!", icon="🔔")
+
 # Premium Header
 st.markdown("""
     <div class="premium-header">
