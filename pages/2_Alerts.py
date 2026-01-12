@@ -25,6 +25,33 @@ show_user_info(user)
 # Page header
 st.markdown(page_header("Security Alerts", "Real-time threat detection and response"), unsafe_allow_html=True)
 
+# Auto-refresh every 30 seconds
+import time
+if 'last_alert_refresh' not in st.session_state:
+    st.session_state.last_alert_refresh = time.time()
+
+# Refresh button and auto-refresh indicator
+col_refresh, col_time = st.columns([1, 3])
+with col_refresh:
+    if st.button("Refresh Alerts", type="primary"):
+        st.cache_data.clear()
+        st.session_state.last_alert_refresh = time.time()
+        st.rerun()
+
+with col_time:
+    st.markdown(f'''
+        <div style="display: flex; align-items: center; gap: 0.5rem; height: 38px;">
+            <span style="color: #00C853;">●</span>
+            <span style="color: #8B95A5;">Auto-refreshing every 30s</span>
+        </div>
+    ''', unsafe_allow_html=True)
+
+# Auto-refresh logic
+if time.time() - st.session_state.last_alert_refresh > 30:
+    st.cache_data.clear()
+    st.session_state.last_alert_refresh = time.time()
+    st.rerun()
+
 # Generate alerts data
 @st.cache_data(ttl=30)
 def get_alerts():
