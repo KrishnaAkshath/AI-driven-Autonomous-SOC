@@ -72,34 +72,58 @@ with tab1:
         progress = st.progress(0)
         status = st.empty()
         
-        steps = ["Collecting data...", "Analyzing threats...", "Generating charts...", "Formatting report...", "Finalizing..."]
+        steps = ["Collecting data...", "Analyzing threats...", "Generating content...", "Formatting report...", "Finalizing..."]
         for i, step in enumerate(steps):
             status.markdown(f'<p style="color: #00D4FF;">{step}</p>', unsafe_allow_html=True)
             progress.progress((i + 1) / len(steps))
             import time
-            time.sleep(0.5)
+            time.sleep(0.4)
         
-        st.success("Report generated successfully!")
-        
-        st.markdown("""
-            <div class="glass-card" style="margin-top: 1rem;">
-                <h4 style="color: #00D4FF; margin: 0 0 1rem 0;">Report Preview</h4>
-                <div style="background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 12px;">
-                    <h3 style="color: #FAFAFA; text-align: center;">Weekly Security Summary</h3>
-                    <p style="color: #8B95A5; text-align: center;">AI-Driven Autonomous SOC</p>
-                    <hr style="border-color: rgba(255,255,255,0.1);">
-                    <p style="color: #FAFAFA;"><strong>Abstract:</strong> This report summarizes the security posture for the reporting period, including threat detection, incident response, and recommendations.</p>
-                    <p style="color: #8B95A5;">Generated: """ + datetime.now().strftime("%Y-%m-%d %H:%M") + """</p>
+        # Generate actual report
+        try:
+            from services.report_generator import generate_pdf_report, generate_security_report
+            
+            # Try PDF first, fallback to text
+            try:
+                report_data = generate_pdf_report(report_type, date_range, include_charts, include_raw, executive_summary)
+                file_ext = "pdf"
+                mime_type = "application/pdf"
+            except:
+                report_data = generate_security_report(report_type, date_range, include_charts, include_raw, executive_summary)
+                file_ext = "txt"
+                mime_type = "text/plain"
+            
+            st.success("Report generated successfully!")
+            
+            st.markdown("""
+                <div class="glass-card" style="margin-top: 1rem;">
+                    <h4 style="color: #00D4FF; margin: 0 0 1rem 0;">Report Preview</h4>
+                    <div style="background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 12px;">
+                        <h3 style="color: #FAFAFA; text-align: center;">""" + report_type + """</h3>
+                        <p style="color: #8B95A5; text-align: center;">AI-Driven Autonomous SOC</p>
+                        <hr style="border-color: rgba(255,255,255,0.1);">
+                        <p style="color: #FAFAFA;"><strong>Report Contents:</strong></p>
+                        <ul style="color: #8B95A5;">
+                            <li>Executive Summary</li>
+                            <li>Threat Analysis</li>
+                            <li>Geographic Distribution</li>
+                            <li>Automated Response Summary</li>
+                            <li>Recommendations</li>
+                        </ul>
+                        <p style="color: #8B95A5;">Generated: """ + datetime.now().strftime("%Y-%m-%d %H:%M") + """</p>
+                    </div>
                 </div>
-            </div>
-        """, unsafe_allow_html=True)
-        
-        st.download_button(
-            "Download Report (PDF)",
-            data=b"Report content placeholder",
-            file_name=f"SOC_Report_{datetime.now().strftime('%Y%m%d')}.pdf",
-            mime="application/pdf"
-        )
+            """, unsafe_allow_html=True)
+            
+            st.download_button(
+                f"Download Report ({file_ext.upper()})",
+                data=report_data,
+                file_name=f"SOC_Report_{datetime.now().strftime('%Y%m%d_%H%M')}.{file_ext}",
+                mime=mime_type,
+                use_container_width=True
+            )
+        except Exception as e:
+            st.error(f"Error generating report: {e}")
 
 with tab2:
     st.markdown(section_title("Previous Reports"), unsafe_allow_html=True)
