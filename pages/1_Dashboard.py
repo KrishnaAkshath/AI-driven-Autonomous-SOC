@@ -249,30 +249,49 @@ def load_soc_data():
     if FULL_MODE:
         return pd.read_csv(DATA_PATH)
     else:
-        np.random.seed(int(datetime.now().timestamp()) % 1000)
-        n = 2000
+        # Dynamic Simulation
+        # Vary total events to make it look "live"
+        base_n = 2000
+        volatility = random.randint(-300, 500)
+        n = base_n + volatility
+        
+        # Vary probabilities slightly for dynamic charts
+        p_normal = max(0.4, 0.6 + random.uniform(-0.1, 0.05))
+        remaining = 1.0 - p_normal
+        other_p = np.random.dirichlet(np.ones(9)) * remaining
+        
+        probs = [p_normal] + list(other_p)
+        
         base_time = datetime.now()
-        timestamps = [base_time - timedelta(minutes=random.randint(1, 2880)) for _ in range(n)]
+        # Create timestamps with varying density
+        timestamps = [base_time - timedelta(minutes=random.randint(1, 1440)) for _ in range(n)]
         timestamps.sort(reverse=True)
+        
         attack_types = np.random.choice(
             ["Normal", "Port Scan", "DDoS", "Brute Force", "SQL Injection", "XSS", "Malware C2", "Data Exfil", "Privilege Esc", "Ransomware"],
-            size=n, p=[0.60, 0.12, 0.08, 0.07, 0.04, 0.03, 0.02, 0.02, 0.01, 0.01]
+            size=n, p=probs
         )
         risk_scores = []
         for attack in attack_types:
-            if attack == "Normal": risk_scores.append(np.random.normal(12, 6))
-            elif attack in ["Port Scan", "Brute Force"]: risk_scores.append(np.random.normal(48, 12))
-            elif attack in ["DDoS", "SQL Injection", "XSS"]: risk_scores.append(np.random.normal(68, 10))
-            else: risk_scores.append(np.random.normal(88, 6))
+            noise = random.uniform(-5, 5)
+            if attack == "Normal": risk_scores.append(max(0, np.random.normal(12, 6) + noise))
+            elif attack in ["Port Scan", "Brute Force"]: risk_scores.append(np.random.normal(48, 12) + noise)
+            elif attack in ["DDoS", "SQL Injection", "XSS"]: risk_scores.append(np.random.normal(68, 10) + noise)
+            else: risk_scores.append(min(100, np.random.normal(88, 6) + noise))
+            
         risk_scores = np.clip(risk_scores, 0, 100).round(2)
         decisions = ["BLOCK" if r >= 70 else "RESTRICT" if r >= 30 else "ALLOW" for r in risk_scores]
         countries = ["United States", "China", "Russia", "Germany", "Brazil", "India", "Ukraine", "Iran", "North Korea", "Netherlands"]
+        
+        # Shuffle countries bias
+        country_p = np.random.dirichlet(np.ones(len(countries)))
+        
         return pd.DataFrame({
             "timestamp": timestamps,
             "attack_type": attack_types,
             "risk_score": risk_scores,
             "access_decision": decisions,
-            "source_country": np.random.choice(countries, size=n, p=[0.25, 0.20, 0.15, 0.10, 0.08, 0.07, 0.05, 0.04, 0.03, 0.03]),
+            "source_country": np.random.choice(countries, size=n, p=country_p),
             "source_ip": [f"{random.randint(1,223)}.{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(1,254)}" for _ in range(n)],
             "dest_port": np.random.choice([22, 80, 443, 3389, 445, 8080, 3306, 21], size=n)
         })
