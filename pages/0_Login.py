@@ -88,7 +88,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 from auth.auth_manager import login_user, register_user, check_auth
-from auth.two_factor import create_otp, verify_otp, send_otp_email, send_otp_telegram, is_device_trusted, add_trusted_device
+from auth.two_factor import create_otp, verify_otp, send_otp_email, is_device_trusted, add_trusted_device
 
 def get_device_id():
     if 'device_id' not in st.session_state:
