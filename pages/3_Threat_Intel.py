@@ -15,6 +15,7 @@ from ui.theme import PREMIUM_CSS, page_header, section_title
 st.markdown(PREMIUM_CSS, unsafe_allow_html=True)
 
 from auth.auth_manager import check_auth, show_user_info
+from services.threat_intel import get_latest_threats
 
 user = check_auth()
 if not user:
@@ -167,6 +168,43 @@ with col2:
                 </div>
             </div>
         """, unsafe_allow_html=True)
+
+st.markdown("<br>", unsafe_allow_html=True)
+st.markdown(section_title("Live Threat Feed (AlienVault OTX)"), unsafe_allow_html=True)
+
+try:
+    pulses = get_latest_threats()
+    if pulses:
+        # Show top 5
+        for pulse in pulses[:5]:
+            tags_html = "".join([f'<span style="background:rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.3); padding:0.1rem 0.5rem; border-radius:12px; font-size:0.75rem; margin-right:0.5rem; color:#D8B4FE;">{tag}</span>' for tag in pulse.get('tags', [])])
+            desc = pulse.get('description', '')[:150] + "..." if pulse.get('description') else "No description available."
+            
+            st.markdown(f"""
+                <div class="glass-card" style="margin-bottom: 0.8rem; border-left: 3px solid #8B5CF6; transition: transform 0.2s;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div style="flex: 1;">
+                            <h4 style="color: #FAFAFA; margin: 0 0 0.3rem 0; font-size: 1.05rem;">{pulse.get('name', 'Unknown Threat')}</h4>
+                            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                                <span style="color: #00D4FF; font-size: 0.8rem;">👤 {pulse.get('author') or 'AlienVault'}</span>
+                                <span style="color: #8B95A5; font-size: 0.8rem;">📅 {pulse.get('created', '')[:10]}</span>
+                            </div>
+                            <div style="margin-bottom: 0.6rem;">{tags_html}</div>
+                            <p style="color: #B0B8C3; margin: 0; font-size: 0.9rem; line-height: 1.5;">{desc}</p>
+                        </div>
+                        <div style="text-align: right; min-width: 80px; padding-left: 1rem;">
+                            <div style="background: rgba(255, 68, 68, 0.1); border-radius: 8px; padding: 0.5rem;">
+                                <span style="color: #FF4444; font-weight: 700; font-size: 1.2rem; display: block;">{pulse.get('indicators', 0)}</span>
+                                <span style="color: #FF8C00; font-size: 0.7rem; text-transform: uppercase;">Indicators</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+    else:
+        st.info("No recent OTX data available. Check your API key in Settings.")
+except Exception as e:
+    st.error(f"Error connecting to AlienVault OTX: {e}")
 
 st.markdown("---")
 st.markdown('<div style="text-align: center; color: #8B95A5;"><p>AI-Driven Autonomous SOC | Threat Intelligence</p></div>', unsafe_allow_html=True)
