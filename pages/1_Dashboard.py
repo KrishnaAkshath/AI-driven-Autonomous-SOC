@@ -249,7 +249,23 @@ def load_soc_data():
     if FULL_MODE:
         return pd.read_csv(DATA_PATH)
     else:
-        # Dynamic Simulation
+        # Dynamic Simulation enriched with Real OTX Data
+        from services.threat_intel import get_latest_threats, get_threat_stats
+        
+        # 1. Fetch live intel
+        real_countries = ["United States", "China", "Russia", "Germany", "Brazil", "India"] # Fallback
+        real_ips = []
+        try:
+            pulses = get_latest_threats()
+            for p in pulses:
+                # Basic parsing of pulse description for country context
+                desc = (p.get('name', '') + ' ' + p.get('description', '')).lower()
+                for c_name in ["China", "Russia", "Iran", "Korea", "Vietnam", "India", "Brazil", "Ukraine", "France", "Germany", "Israel", "United States"]:
+                    if c_name.lower() in desc:
+                        real_countries.append(c_name)
+        except:
+            pass
+            
         # Vary total events to make it look "live"
         base_n = 2000
         volatility = random.randint(-300, 500)
@@ -263,7 +279,6 @@ def load_soc_data():
         probs = [p_normal] + list(other_p)
         
         base_time = datetime.now()
-        # Create timestamps with varying density
         timestamps = [base_time - timedelta(minutes=random.randint(1, 1440)) for _ in range(n)]
         timestamps.sort(reverse=True)
         
@@ -281,17 +296,21 @@ def load_soc_data():
             
         risk_scores = np.clip(risk_scores, 0, 100).round(2)
         decisions = ["BLOCK" if r >= 70 else "RESTRICT" if r >= 30 else "ALLOW" for r in risk_scores]
-        countries = ["United States", "China", "Russia", "Germany", "Brazil", "India", "Ukraine", "Iran", "North Korea", "Netherlands"]
         
+        # Use Real Countries if found
+        uniq_countries = list(set(real_countries))
+        if len(uniq_countries) < 5:
+            uniq_countries = ["United States", "China", "Russia", "Germany", "Brazil", "India", "Ukraine", "Iran", "North Korea", "Netherlands"]
+            
         # Shuffle countries bias
-        country_p = np.random.dirichlet(np.ones(len(countries)))
+        country_p = np.random.dirichlet(np.ones(len(uniq_countries)))
         
         return pd.DataFrame({
             "timestamp": timestamps,
             "attack_type": attack_types,
             "risk_score": risk_scores,
             "access_decision": decisions,
-            "source_country": np.random.choice(countries, size=n, p=country_p),
+            "source_country": np.random.choice(uniq_countries, size=n, p=country_p),
             "source_ip": [f"{random.randint(1,223)}.{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(1,254)}" for _ in range(n)],
             "dest_port": np.random.choice([22, 80, 443, 3389, 445, 8080, 3306, 21], size=n)
         })

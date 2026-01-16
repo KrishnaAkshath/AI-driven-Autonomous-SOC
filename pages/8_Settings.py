@@ -96,37 +96,47 @@ with tab2:
     
     st.markdown("""
         <div class="glass-card" style="margin-bottom: 1.5rem;">
-            <h4 style="color: #4285F4; margin: 0 0 0.5rem 0;">Sign in with Google</h4>
-            <p style="color: #FF8C00; margin: 0; font-size: 0.9rem;">Coming Soon</p>
+            <h4 style="color: #4285F4; margin: 0 0 0.5rem 0;">Google OAuth Configuration</h4>
+            <p style="color: #8B95A5; margin: 0; font-size: 0.9rem;">Enable 'Sign in with Google' by adding your credentials from Google Cloud Console.</p>
         </div>
     """, unsafe_allow_html=True)
     
-    st.markdown("""
-        <div class="glass-card" style="margin-bottom: 1.5rem;">
-            <h4 style="color: #FFFFFF; margin: 0 0 0.5rem 0;">Sign in with Apple</h4>
-            <p style="color: #FF8C00; margin: 0; font-size: 0.9rem;">Coming Soon</p>
-        </div>
-    """, unsafe_allow_html=True)
+    col_oauth1, col_oauth2 = st.columns(2)
+    with col_oauth1:
+        google_client_id = st.text_input("Client ID", value=config.get("google_client_id", ""), key="g_client_id")
+        google_redirect = st.text_input("Redirect URI", value=config.get("google_redirect_uri", "http://localhost:8501"), key="g_redirect")
     
-    st.info("Social login options are coming in a future update. Currently, use email/password authentication.")
+    with col_oauth2:
+        google_client_secret = st.text_input("Client Secret", value=config.get("google_client_secret", ""), type="password", key="g_secret")
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.caption("Redirect URI must match exactly what is configured in Google Cloud Console.")
+        
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    if st.button("Save OAuth Settings", type="primary"):
+        config["google_client_id"] = google_client_id
+        config["google_client_secret"] = google_client_secret
+        config["google_redirect_uri"] = google_redirect
+        save_config(config)
+        st.success("OAuth settings saved! Google Login will actiavte if Client ID is present.")
 
 
 with tab3:
     st.markdown(section_title("Notification Settings"), unsafe_allow_html=True)
     
     st.markdown("""
-        <div class="glass-card" style="margin-bottom: 1.5rem;">
-            <h4 style="color: #FF4444; margin: 0 0 1rem 0;">Email Alerts (Gmail)</h4>
-            <p style="color: #8B95A5; margin: 0 0 1rem 0; font-size: 0.9rem;">
-                Configure SMTP settings to receive critical security alerts. 
-                Use an App Password for Gmail.
-            </p>
-            
-            <div style="background: rgba(255, 68, 68, 0.1); border-left: 3px solid #FF4444; padding: 0.8rem; border-radius: 4px; margin-bottom: 1rem;">
-                <p style="color: #FAFAFA; margin: 0; font-size: 0.85rem;">🔒 Alerts are sent securely using TLS encryption.</p>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
+<div class="glass-card" style="margin-bottom: 1.5rem;">
+    <h4 style="color: #FF4444; margin: 0 0 1rem 0;">Email Alerts (Gmail)</h4>
+    <p style="color: #8B95A5; margin: 0 0 1rem 0; font-size: 0.9rem;">
+        Configure SMTP settings to receive critical security alerts. 
+        Use an App Password for Gmail.
+    </p>
+    
+    <div style="background: rgba(255, 68, 68, 0.1); border-left: 3px solid #FF4444; padding: 0.8rem; border-radius: 4px; margin-bottom: 1rem;">
+        <p style="color: #FAFAFA; margin: 0; font-size: 0.85rem;">🔒 Alerts are sent securely using TLS encryption.</p>
+    </div>
+</div>
+""", unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     

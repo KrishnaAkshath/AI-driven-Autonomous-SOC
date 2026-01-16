@@ -14,7 +14,8 @@ class EmailNotifier:
         self.smtp_server = smtp_server or os.getenv("SMTP_SERVER", "smtp.gmail.com")
         self.smtp_port = smtp_port
         self.username = username or os.getenv("GMAIL_EMAIL")
-        self.password = password or os.getenv("GMAIL_PASSWORD")
+        _password = password or os.getenv("GMAIL_PASSWORD")
+        self.password = _password.replace(" ", "") if _password else None
         self.from_email = from_email or self.username
     
     def is_configured(self) -> bool:
