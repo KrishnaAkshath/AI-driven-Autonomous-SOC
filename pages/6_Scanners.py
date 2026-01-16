@@ -79,10 +79,13 @@ with tab2:
     st.markdown(section_title("URL Scanner"), unsafe_allow_html=True)
     st.markdown('<p style="color: #8B95A5;">Check URLs for malicious content using VirusTotal.</p>', unsafe_allow_html=True)
     
-    config = {}
-    if os.path.exists('.soc_config.json'):
-        with open('.soc_config.json', 'r') as f:
-            config = json.load(f)
+    try:
+        if os.path.exists('.soc_config.json'):
+            with open('.soc_config.json', 'r') as f:
+                config = json.load(f)
+    except Exception as e:
+        st.error(f"Configuration Error: {e}")
+        config = {}
     
     VT_KEY = config.get('virustotal_api_key', '')
     
@@ -93,47 +96,53 @@ with tab2:
         
         url = st.text_input("Enter URL", placeholder="https://example.com")
         
-        if st.button("Scan URL", type="primary", key="scan_url") and url:
-            if not url.startswith('http'):
-                url = 'https://' + url
-            
-            with st.spinner("Scanning with 70+ vendors..."):
-                try:
-                    url_id = base64.urlsafe_b64encode(url.encode()).decode().strip('=')
-                    resp = requests.get(
-                        f'https://www.virustotal.com/api/v3/urls/{url_id}',
-                        headers={'x-apikey': VT_KEY},
-                        timeout=15
-                    )
-                    
-                    if resp.status_code == 200:
-                        data = resp.json()['data']['attributes']
-                        stats = data.get('last_analysis_stats', {})
+        if st.button("Scan URL", type="primary", key="scan_url"):
+            if url:
+                if not url.startswith(('http://', 'https://')):
+                    url = 'https://' + url
+                
+                with st.spinner("Scanning with 70+ vendors..."):
+                    try:
+                        import base64
+                        url_id = base64.urlsafe_b64encode(url.encode()).decode().strip('=')
+                        resp = requests.get(
+                            f'https://www.virustotal.com/api/v3/urls/{url_id}',
+                            headers={'x-apikey': VT_KEY},
+                            timeout=15
+                        )
                         
-                        mal = stats.get('malicious', 0)
-                        sus = stats.get('suspicious', 0)
-                        clean = stats.get('harmless', 0)
-                        
-                        if mal > 0:
-                            verdict, color = "MALICIOUS", "#FF4444"
-                        elif sus > 2:
-                            verdict, color = "SUSPICIOUS", "#FF8C00"
+                        if resp.status_code == 200:
+                            data = resp.json().get('data', {}).get('attributes', {})
+                            stats = data.get('last_analysis_stats', {})
+                            
+                            mal = stats.get('malicious', 0)
+                            sus = stats.get('suspicious', 0)
+                            clean = stats.get('harmless', 0)
+                            
+                            if mal > 0:
+                                verdict, color = "MALICIOUS", "#FF4444"
+                            elif sus > 2:
+                                verdict, color = "SUSPICIOUS", "#FF8C00"
+                            else:
+                                verdict, color = "SAFE", "#00C853"
+                            
+                            c1, c2, c3, c4 = st.columns(4)
+                            with c1:
+                                st.markdown(f'<div class="metric-card"><p class="metric-value" style="color: {color};">{verdict}</p><p class="metric-label">Verdict</p></div>', unsafe_allow_html=True)
+                            with c2:
+                                st.markdown(f'<div class="metric-card"><p class="metric-value" style="color: #FF4444;">{mal}</p><p class="metric-label">Malicious</p></div>', unsafe_allow_html=True)
+                            with c3:
+                                st.markdown(f'<div class="metric-card"><p class="metric-value" style="color: #FF8C00;">{sus}</p><p class="metric-label">Suspicious</p></div>', unsafe_allow_html=True)
+                            with c4:
+                                st.markdown(f'<div class="metric-card"><p class="metric-value" style="color: #00C853;">{clean}</p><p class="metric-label">Clean</p></div>', unsafe_allow_html=True)
+                        elif resp.status_code == 404:
+                            st.info(f"URL not found in VirusTotal database. Please analyze it manually at virustotal.com (API submission requires higher privileges).")
                         else:
-                            verdict, color = "SAFE", "#00C853"
-                        
-                        c1, c2, c3, c4 = st.columns(4)
-                        with c1:
-                            st.markdown(f'<div class="metric-card"><p class="metric-value" style="color: {color};">{verdict}</p><p class="metric-label">Verdict</p></div>', unsafe_allow_html=True)
-                        with c2:
-                            st.markdown(f'<div class="metric-card"><p class="metric-value" style="color: #FF4444;">{mal}</p><p class="metric-label">Malicious</p></div>', unsafe_allow_html=True)
-                        with c3:
-                            st.markdown(f'<div class="metric-card"><p class="metric-value" style="color: #FF8C00;">{sus}</p><p class="metric-label">Suspicious</p></div>', unsafe_allow_html=True)
-                        with c4:
-                            st.markdown(f'<div class="metric-card"><p class="metric-value" style="color: #00C853;">{clean}</p><p class="metric-label">Clean</p></div>', unsafe_allow_html=True)
-                    else:
-                        st.info("URL not in database. Submitting for analysis...")
-                except Exception as e:
-                    st.error(f"Error: {e}")
+                            st.error(f"API Error ({resp.status_code}): {resp.text}")
+                    except Exception as e:
+                        st.error(f"Scan Execution Error: {e}")
+            else:
+                st.warning("Please enter a URL.")
 
 with tab3:
     st.markdown(section_title("Network Monitor"), unsafe_allow_html=True)

@@ -171,76 +171,79 @@ with tab2:
     }
     
     if st.button("Start Port Scan", type="primary") and target:
-        ports = port_lists[scan_type]
-        
-        def check_port(port):
-            try:
-                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                sock.settimeout(1)
-                result = sock.connect_ex((target, port))
-                sock.close()
-                return port if result == 0 else None
-            except:
-                return None
-        
-        st.markdown(section_title(f"Scanning {len(ports)} ports..."), unsafe_allow_html=True)
-        
-        progress = st.progress(0)
-        open_ports = []
-        
-        with ThreadPoolExecutor(max_workers=50) as executor:
-            futures = {executor.submit(check_port, p): p for p in ports}
-            done = 0
-            for future in as_completed(futures):
-                done += 1
-                progress.progress(done / len(ports))
-                result = future.result()
-                if result:
-                    open_ports.append(result)
-        
-        c1, c2 = st.columns(2)
-        with c1:
-            st.markdown(f'<div class="metric-card"><p class="metric-value" style="color: #00D4FF;">{len(open_ports)}</p><p class="metric-label">Open Ports</p></div>', unsafe_allow_html=True)
-        with c2:
-            st.markdown(f'<div class="metric-card"><p class="metric-value" style="color: #00C853;">{len(ports) - len(open_ports)}</p><p class="metric-label">Closed/Filtered</p></div>', unsafe_allow_html=True)
-        
-        if open_ports:
-            st.markdown("<br>", unsafe_allow_html=True)
-            st.markdown(section_title("Open Ports"), unsafe_allow_html=True)
+        try:
+            ports = port_lists[scan_type]
             
-            services = {21:"FTP", 22:"SSH", 23:"Telnet", 25:"SMTP", 53:"DNS", 80:"HTTP", 110:"POP3", 139:"NetBIOS", 143:"IMAP", 443:"HTTPS", 445:"SMB", 993:"IMAPS", 1433:"MSSQL", 3306:"MySQL", 3389:"RDP", 5432:"PostgreSQL", 5900:"VNC", 8080:"HTTP-Proxy"}
+            def check_port(port):
+                try:
+                    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    sock.settimeout(1)
+                    result = sock.connect_ex((target, port))
+                    sock.close()
+                    return port if result == 0 else None
+                except:
+                    return None
             
-            for p in sorted(open_ports):
-                svc = services.get(p, "Unknown")
-                risk_color = "#FF4444" if p in [23, 445, 3389, 21] else "#00C853"
-                st.markdown(f"""
-                    <div class="glass-card" style="margin: 0.3rem 0; padding: 0.8rem 1.2rem; border-left: 3px solid {risk_color};">
-                        <span style="color: #FAFAFA; font-weight: 600;">Port {p}</span>
-                        <span style="color: #8B95A5; margin-left: 1rem;">{svc}</span>
-                        <span style="color: {risk_color}; float: right;">OPEN</span>
-                    </div>
-                """, unsafe_allow_html=True)
+            st.markdown(section_title(f"Scanning {len(ports)} ports..."), unsafe_allow_html=True)
             
-            # Vulnerability check
-            vulns = []
-            if 23 in open_ports: vulns.append(("CRITICAL", "Telnet", "Unencrypted protocol - use SSH instead"))
-            if 445 in open_ports: vulns.append(("CRITICAL", "SMB", "Vulnerable to ransomware attacks"))
-            if 3389 in open_ports: vulns.append(("HIGH", "RDP", "Exposed to brute force attacks"))
-            if 21 in open_ports: vulns.append(("HIGH", "FTP", "Unencrypted file transfer"))
+            progress = st.progress(0)
+            open_ports = []
             
-            if vulns:
+            with ThreadPoolExecutor(max_workers=50) as executor:
+                futures = {executor.submit(check_port, p): p for p in ports}
+                done = 0
+                for future in as_completed(futures):
+                    done += 1
+                    progress.progress(done / len(ports))
+                    result = future.result()
+                    if result:
+                        open_ports.append(result)
+            
+            c1, c2 = st.columns(2)
+            with c1:
+                st.markdown(f'<div class="metric-card"><p class="metric-value" style="color: #00D4FF;">{len(open_ports)}</p><p class="metric-label">Open Ports</p></div>', unsafe_allow_html=True)
+            with c2:
+                st.markdown(f'<div class="metric-card"><p class="metric-value" style="color: #00C853;">{len(ports) - len(open_ports)}</p><p class="metric-label">Closed/Filtered</p></div>', unsafe_allow_html=True)
+            
+            if open_ports:
                 st.markdown("<br>", unsafe_allow_html=True)
-                st.markdown(section_title("Vulnerabilities Found"), unsafe_allow_html=True)
-                for sev, svc, desc in vulns:
-                    sev_color = "#FF4444" if sev == "CRITICAL" else "#FF8C00"
+                st.markdown(section_title("Open Ports"), unsafe_allow_html=True)
+                
+                services = {21:"FTP", 22:"SSH", 23:"Telnet", 25:"SMTP", 53:"DNS", 80:"HTTP", 110:"POP3", 139:"NetBIOS", 143:"IMAP", 443:"HTTPS", 445:"SMB", 993:"IMAPS", 1433:"MSSQL", 3306:"MySQL", 3389:"RDP", 5432:"PostgreSQL", 5900:"VNC", 8080:"HTTP-Proxy"}
+                
+                for p in sorted(open_ports):
+                    svc = services.get(p, "Unknown")
+                    risk_color = "#FF4444" if p in [23, 445, 3389, 21] else "#00C853"
                     st.markdown(f"""
-                        <div class="alert-card" style="border-left-color: {sev_color};">
-                            <span style="color: {sev_color}; font-weight: 700;">[{sev}] {svc}</span>
-                            <p style="color: #FAFAFA; margin: 0.3rem 0 0 0;">{desc}</p>
+                        <div class="glass-card" style="margin: 0.3rem 0; padding: 0.8rem 1.2rem; border-left: 3px solid {risk_color};">
+                            <span style="color: #FAFAFA; font-weight: 600;">Port {p}</span>
+                            <span style="color: #8B95A5; margin-left: 1rem;">{svc}</span>
+                            <span style="color: {risk_color}; float: right;">OPEN</span>
                         </div>
                     """, unsafe_allow_html=True)
-        else:
-            st.info("No open ports found on target")
+                
+                # Vulnerability check
+                vulns = []
+                if 23 in open_ports: vulns.append(("CRITICAL", "Telnet", "Unencrypted protocol - use SSH instead"))
+                if 445 in open_ports: vulns.append(("CRITICAL", "SMB", "Vulnerable to ransomware attacks"))
+                if 3389 in open_ports: vulns.append(("HIGH", "RDP", "Exposed to brute force attacks"))
+                if 21 in open_ports: vulns.append(("HIGH", "FTP", "Unencrypted file transfer"))
+                
+                if vulns:
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    st.markdown(section_title("Vulnerabilities Found"), unsafe_allow_html=True)
+                    for sev, svc, desc in vulns:
+                        sev_color = "#FF4444" if sev == "CRITICAL" else "#FF8C00"
+                        st.markdown(f"""
+                            <div class="alert-card" style="border-left-color: {sev_color};">
+                                <span style="color: {sev_color}; font-weight: 700;">[{sev}] {svc}</span>
+                                <p style="color: #FAFAFA; margin: 0.3rem 0 0 0;">{desc}</p>
+                            </div>
+                        """, unsafe_allow_html=True)
+            else:
+                st.info("No open ports found on target")
+        except Exception as e:
+            st.error(f"Port Scan Error: {e}")
 
 st.markdown("---")
 st.markdown('<div style="text-align: center; color: #8B95A5;"><p>AI-Driven Autonomous SOC | Security Testing</p></div>', unsafe_allow_html=True)
